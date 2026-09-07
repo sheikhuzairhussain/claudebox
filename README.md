@@ -1,86 +1,73 @@
 # claudebox
 
-Open separate Claude desktop profiles from your terminal, with each profile's
-local settings and history in its own directory.
+Run separate Claude desktop accounts side by side on macOS.
 
 ```sh
 claudebox personal
 claudebox work
 ```
 
-A missing profile is created automatically and opens for first-time sign-in.
-Repeated commands focus its existing window.
-
-## Requirements
-
-- macOS with Claude installed at `/Applications/Claude.app`
-- Python 3.11 or newer
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.5.7 or newer
-
-This is an independent utility, not an Anthropic product. It launches Electron
-with `--user-data-dir` and verifies the process opened storage in that directory.
-It does not switch terminal Claude Code accounts.
+Each profile opens in its own window. New profiles prompt you to sign in;
+running the command again focuses the existing window.
 
 ## Install
 
-Clone the repository and install with uv:
+Requires macOS, Claude at `/Applications/Claude.app`, Python 3.11+, and
+[uv](https://docs.astral.sh/uv/getting-started/installation/) 0.5.7+.
 
 ```sh
 git clone https://github.com/sheikhuzairhussain/claudebox.git
 cd claudebox
 uv tool install .
-claudebox --help
 ```
 
-If uv's executable directory is not on your PATH, run `uv tool update-shell`
-and open a new terminal. For an editable installation, use `uv tool install --editable .`.
+If `claudebox` isn't found, run `uv tool update-shell` and open a new terminal.
 
-## Commands
+## Usage
 
-| Command | Behavior |
+| Command | Action |
 | --- | --- |
 | `claudebox` or `claudebox --help` | Show help |
 | `claudebox <profile>` | Create, open, or focus a profile |
-| `claudebox --list` | List saved profiles |
-| `claudebox --delete <profile>` | Confirm and move a closed profile to Trash |
+| `claudebox --list` | List profiles |
+| `claudebox --delete <profile>` | Move a profile to Trash after confirmation |
 
-Profile names contain lowercase letters, digits, underscores, or hyphens and
-start with a letter or digit. Names are case-sensitive.
+Names can contain lowercase letters, digits, hyphens, and underscores, and must
+start with a letter or digit.
 
-Deletion requires an interactive terminal and typing the exact profile name.
-Quit the selected profile's Claude instance before deleting it. If the launcher
-cannot inspect a running process, deletion stops rather than guessing.
-Local data moves to `~/.Trash`; it does
-not delete the Claude account or its cloud data. If personal is the target of
-the default Claude directory symlink, that link is removed as well.
+To delete a profile, quit its Claude window first, then type the profile name
+when prompted. This removes local profile data, not your Claude account.
 
 ## Profile data
 
-Profiles live outside the repository:
+Desktop profiles are stored in:
 
 ```text
 ~/Library/Application Support/Claude-profiles/<profile>/
 ```
 
-New directories are accessible only to their owner. Existing permissions are
-preserved. Credentials and histories are never copied into this project.
-Logs are written to `claudebox-launch.log` inside each profile. The launcher
-checks open storage paths with macOS `lsof` before focusing a window. It does not
-trust saved PID files, environment markers, or command-line labels on their own.
-If a new process does not open the requested storage, the launcher stops that
-process and reports an error.
+Desktop sign-ins and settings are separate. Claude Code can still share local
+project transcripts and memory through `~/.claude`; these profiles are not a
+filesystem sandbox. The terminal Claude Code login is unaffected.
 
-To use your current desktop login as personal, first quit Claude and move the
-existing `~/Library/Application Support/Claude` directory to
-`~/Library/Application Support/Claude-profiles/personal`. Do this only when the
-destination does not already exist. Then create a symlink from the original
-Claude directory path to the new personal directory. Keep a backup before
-migrating. Installation does not migrate existing data automatically.
+### Keep your existing login
 
-During a new profile's first login, macOS may route browser callbacks to another
-Claude window. If that happens, quit the other instances, complete login in the
-new profile, and reopen them. Concurrent login and Code behavior depends on the
-installed Claude version; the automated tests do not authenticate real accounts.
+Installation leaves your existing Claude data in place. To adopt it as `personal`,
+quit Claude, back up `~/Library/Application Support/Claude`, and move that directory
+to `Claude-profiles/personal`. The destination must not already exist. Create a
+symlink at the original path pointing to the new location if you want ordinary
+Claude launches to keep using personal.
+
+### Troubleshooting
+
+- **Sign-in opens the wrong window:** quit the other Claude instances, finish
+  signing in, then reopen them.
+- **Launch fails:** check `claudebox-launch.log` inside the profile directory.
+  The launcher stops a new process if it cannot verify the requested storage path.
+
+The launcher uses Electron's `--user-data-dir` flag and checks the process's open
+storage files. Tested with Claude desktop 1.46388.4 on macOS. Claude updates may
+affect compatibility.
 
 ## Development
 
@@ -93,32 +80,11 @@ uv run ruff format --check .
 uv build
 ```
 
-The package uses a `src` layout, a console entry point, and no runtime
-dependencies. Tests use temporary profile directories and mock macOS process
-interactions. They do not open Claude, read real credentials, or delete real
-profiles. GitHub Actions runs lint, tests, and package builds on macOS with
-Python 3.11 and 3.13.
+Use `uv tool install --editable .` to run your checkout as an installed command.
+Tests use temporary directories and mocked process inspection. CI runs on macOS
+with Python 3.11 and 3.13. Build artifacts are written to `dist/`.
 
-## Compatibility
+## Credits and license
 
-On macOS Claude desktop 1.46388.4, a second profile was observed opening at the
-sign-in screen while the existing personal session remained available. Process
-inspection confirmed separate storage directories. The two-profile workflow was subsequently confirmed working by the user.
-Automated tests do not authenticate real accounts or verify every Code feature.
-
-`CLAUDE_USER_DATA_DIR` is not equivalent to `--user-data-dir`. This Claude build
-removes the environment variable but accepts the command-line flag. The launcher
-therefore clears legacy profile environment variables and passes the flag.
-The approach was identified in
-[Claude-Code-Desktop-Switcher](https://github.com/PriyanshuGeTRekT/Claude-Code-Desktop-Switcher),
-whose implementation targets Windows.
-
-## Distribution
-
-`uv build` creates wheel and source archives in `dist/`. The repository contains
-application source only; profile data stays outside it. This project is distributed
-through GitHub and is not currently published on PyPI.
-
-## License
-
-[MIT](LICENSE).
+Inspired by [Claude-Code-Desktop-Switcher](https://github.com/PriyanshuGeTRekT/Claude-Code-Desktop-Switcher)
+for Windows. Independent of Anthropic. [MIT license](LICENSE).
