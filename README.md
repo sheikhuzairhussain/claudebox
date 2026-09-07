@@ -5,7 +5,7 @@ local settings and history in its own directory.
 
 ```sh
 claudebox personal
-claudebox mytender
+claudebox work
 ```
 
 A missing profile is created automatically and opens for first-time sign-in.

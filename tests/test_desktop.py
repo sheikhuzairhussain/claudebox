@@ -11,11 +11,11 @@ from claudebox import desktop
 @pytest.mark.parametrize(
     ("relative", "expected"),
     [
-        ("mytender/WebStorage/QuotaManager", True),
+        ("work/WebStorage/QuotaManager", True),
         ("personal/WebStorage/QuotaManager", False),
-        ("mytender-extra/WebStorage/QuotaManager", False),
-        ("mytender/claudebox-launch.log", False),
-        ("mytender/.claudebox.pid", False),
+        ("work-extra/WebStorage/QuotaManager", False),
+        ("work/claudebox-launch.log", False),
+        ("work/.claudebox.pid", False),
     ],
 )
 def test_only_profile_storage_proves_isolation(tmp_path, monkeypatch, relative, expected):
@@ -24,7 +24,7 @@ def test_only_profile_storage_proves_isolation(tmp_path, monkeypatch, relative, 
         "run",
         Mock(return_value=SimpleNamespace(returncode=0, stdout=f"n{tmp_path / relative}\n")),
     )
-    assert desktop.profile_in_use(123, tmp_path / "mytender") is expected
+    assert desktop.profile_in_use(123, tmp_path / "work") is expected
 
 
 def test_default_symlink_resolves_to_personal(tmp_path, monkeypatch):

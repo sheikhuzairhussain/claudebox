@@ -21,7 +21,7 @@ HELP = """Usage:
 
 Examples:
   claudebox personal
-  claudebox mytender
+  claudebox work
 
 Profile names use lowercase letters, digits, underscores, or hyphens,
 and must start with a letter or digit. New profiles require sign-in.
@@ -87,7 +87,7 @@ def focus(pid):
 
 
 def find_instance(profile, directory):
-    # Legacy markers can say mytender while the process is using personal.
+    # Legacy markers can say work while the process is using personal.
     rows = subprocess.check_output(["/bin/ps", "-axo", "pid=,comm="], text=True)
     for row in rows.splitlines():
         parts = row.strip().split(None, 1)

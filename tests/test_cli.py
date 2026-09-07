@@ -48,12 +48,12 @@ def test_invalid_arguments_do_not_create_profiles(profiles, args):
 def test_list_only_valid_profile_directories(profiles, capsys):
     assert cli.main(["--list"]) == 0
     assert "No saved profiles" in capsys.readouterr().out
-    for name in ["personal", "mytender", ".hidden", "INVALID"]:
+    for name in ["personal", "work", ".hidden", "INVALID"]:
         (profiles / name).mkdir(parents=True)
     (profiles / "file").touch()
     (profiles / "linked").symlink_to(profiles / "personal")
     assert cli.main(["--list"]) == 0
-    assert capsys.readouterr().out == "mytender\npersonal\n"
+    assert capsys.readouterr().out == "personal\nwork\n"
 
 
 def test_launch_uses_flag_and_clears_legacy_environment(profiles, monkeypatch):
@@ -63,8 +63,8 @@ def test_launch_uses_flag_and_clears_legacy_environment(profiles, monkeypatch):
     monkeypatch.setenv("CLAUDE_USER_DATA_DIR", "/legacy/personal")
     monkeypatch.setenv("CLAUDEBOX_PROFILE", "personal")
     previous = os.environ.get("CLAUDE_USER_DATA_DIR")
-    assert cli.main(["mytender"]) == 0
-    profile = profiles / "mytender"
+    assert cli.main(["work"]) == 0
+    profile = profiles / "work"
     assert profile.stat().st_mode & 0o777 == 0o700
     assert (profile / ".claudebox.pid").read_text() == "123\n"
     environment = launch.call_args.kwargs["env"]
@@ -164,15 +164,15 @@ def test_process_matching_uses_actual_storage(monkeypatch):
         cli.subprocess, "check_output", Mock(return_value=f"123 {cli.APP}\n456 {cli.APP}\n")
     )
     monkeypatch.setattr(cli, "profile_in_use", Mock(side_effect=[False, True]))
-    assert cli.find_instance("mytender", Path("/example/mytender")) == 456
+    assert cli.find_instance("work", Path("/example/work")) == 456
 
 
 def test_ignored_flag_stops_new_process_without_claiming_success(profiles, monkeypatch, capsys):
     cli.profile_in_use.return_value = False
     process = SimpleNamespace(pid=789, poll=lambda: None, terminate=Mock())
     monkeypatch.setattr(cli.subprocess, "Popen", Mock(return_value=process))
-    assert cli.main(["mytender"]) == 1
+    assert cli.main(["work"]) == 1
     assert "did not open the requested profile" in capsys.readouterr().err
     process.terminate.assert_called_once()
     cli.focus.assert_not_called()
-    assert not (profiles / "mytender/.claudebox.pid").exists()
+    assert not (profiles / "work/.claudebox.pid").exists()
