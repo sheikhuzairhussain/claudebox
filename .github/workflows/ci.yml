@@ -8,6 +8,8 @@ permissions:
 jobs:
   check:
     runs-on: macos-latest
+    env:
+      UV_PYTHON: ${{ matrix.python }}
     strategy:
       matrix:
         python: ["3.11", "3.13"]
